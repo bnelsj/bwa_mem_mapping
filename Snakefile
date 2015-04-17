@@ -70,14 +70,15 @@ rule merge_bams:
         "source config.sh; samtools merge -@ 8 {output} {input}"
 
 rule bwa_mem_map_and_mark_dups:
-    input: get_files
+    input:  lambda wildcards: config["references"][wildcards.reference],
+            get_files
     output:
         "mapping/{reference}/lanes/{lane}.bam"
     params:
         sample=lambda wildcards: manifest.loc[manifest.lane == wildcards.lane, "sample"].tolist()[0],
         flowcell=lambda wildcards: manifest.loc[manifest.lane == wildcards.lane, "flowcell"].tolist()[0],
         custom=config.get("params_bwa_mem", ""),
-        sge_opts="-l mfree=4G -pe serial 12",
+        sge_opts="-l mfree=4G -pe serial 12 -N bwa_mem_map",
         bwa_threads = "8",
         samtools_threads = "4", samtools_memory = "8G"
     log:
