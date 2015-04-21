@@ -45,13 +45,13 @@ def get_files(wildcards):
 from snakemake.exceptions import MissingInputException
 
 rule all:
-    input: expand("mapping/{reference}/metrics/{sample}.insert_size_metrics", reference = config["references"], sample = manifest["sample"].tolist()),
+    input: expand("mapping/{reference}/metrics/{sample}.insert_size_metrics.txt", reference = config["references"], sample = manifest["sample"].tolist()),
            expand("mapping/{reference}/merged/{sample}.bam.bai", reference = config["references"], sample = manifest["sample"].tolist())
     params: sge_opts = "-N do_isize"
 
 rule collect_isize_metrics:
     input: "mapping/{reference}/merged/{sample}.bam"
-    output: "mapping/{reference}/metrics/{sample}.insert_size_metrics"
+    output: "mapping/{reference}/metrics/{sample}.insert_size_metrics.txt"
     params: sge_opts = "-N collect_isize -l mfree=8G"
     shell:
         """source config.sh; java -Xmx8G -jar $PICARD_DIR/CollectInsertSizeMetrics.jar I={input} O={output} H={output}.hist"""
