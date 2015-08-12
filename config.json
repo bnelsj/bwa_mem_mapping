@@ -2,7 +2,7 @@
     "references": {
         "hg19": "/net/eichler/vol2/eee_shared/assemblies/hg19/indexes/bwa_0.7.5a-r405/ucsc.hg19.fasta"
     },
-	"manifest": "/net/eichler/vol20/projects/pacbio/nobackups/bnelsj/chm13/hg19/chm13.mapping.manifest",
+	"manifest": "chm13.mapping.manifest",
     "platform": "ILLUMINA",
     "params_bwa_mem": "-M"
 }

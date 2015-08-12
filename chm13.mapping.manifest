@@ -1,0 +1,5 @@
+sn	flowcell	lane	file
+chm13	111208_SN743_0152_Ad0621acxx	s_6	/net/eichler/vol18/genomes/moles/CHM13/fastq/111208_SN743_0152_Ad0621acxx/fastq/s_6_1.fq.gz
+chm13	111208_SN743_0152_Ad0621acxx	s_6	/net/eichler/vol18/genomes/moles/CHM13/fastq/111208_SN743_0152_Ad0621acxx/fastq/s_6_3.fq.gz
+chm13	120308_SN743_0187_AD0LD1ACXX	s_7	/net/eichler/vol18/genomes/moles/CHM13/fastq/120308_SN743_0187_AD0LD1ACXX/fastq/s_7_1.fq.gz
+chm13	120308_SN743_0187_AD0LD1ACXX	s_7	/net/eichler/vol18/genomes/moles/CHM13/fastq/120308_SN743_0187_AD0LD1ACXX/fastq/s_7_3.fq.gz
