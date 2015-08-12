@@ -42,8 +42,8 @@ shell.prefix("source config.sh; ")
 
 def lanes_from_sample(wildcards):
     manifest_sn = manifest.loc[manifest.sn == wildcards.sample]
-    bams = "mapping/" + wildcards.reference + "/" + manifest_sn.sn + "/" + manifest_sn.flowcell + "/" + manifest.lane + ".bam"
-    return bams.tolist()
+    bams = "mapping/" + wildcards.reference + "/" + manifest_sn.sn + "/" + manifest_sn.flowcell + "/" + manifest_sn.lane + ".bam"
+    return bams.unique().tolist()
 
 def get_files(wildcards):
     return manifest.loc[(manifest.sn == wildcards.sample) & (manifest.flowcell == wildcards.flowcell) & (manifest.lane == wildcards.lane), "file"].tolist()
