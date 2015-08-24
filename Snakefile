@@ -51,16 +51,31 @@ def get_files(wildcards):
 from snakemake.exceptions import MissingInputException
 
 rule all:
-    input: expand("mapping/{reference}/metrics/{sample}.insert_size_metrics.txt", reference = config["references"], sample = manifest["sn"].tolist()),
+    input: expand("mapping/{reference}/metrics/{sample}.{type}.txt", reference = config["references"], sample = manifest["sn"].tolist(), type = ["insert_size_metrics", "flagstat", "idxstats"]),
            expand("mapping/{reference}/merged/{sample}.bam.bai", reference = config["references"], sample = manifest["sn"].tolist())
     params: sge_opts = "-N do_isize"
+
+rule get_flagstat:
+    input: "mapping/{reference}/merged/{sample}.bam", "mapping/{reference}/merged/{sample}.bam.bai"
+    output: "mapping/{reference}/metrics/{sample}.flagstat.txt"
+    params: sge_opts = "-l mfree=8G -N flagstat"
+    shell:
+        "samtools flagstat {input[0]} > {output}"
+   
+
+rule get_idxstats:
+    input: "mapping/{reference}/merged/{sample}.bam", "mapping/{reference}/merged/{sample}.bam.bai"
+    output: "mapping/{reference}/metrics/{sample}.idxstats.txt"
+    params: sge_opts = "-l mfree=8G -N idxstats"
+    shell:
+        "samtools idxstats {input[0]} > {output}"
 
 rule collect_isize_metrics:
     input: "mapping/{reference}/merged/{sample}.bam"
     output: "mapping/{reference}/metrics/{sample}.insert_size_metrics.txt"
     params: sge_opts = "-N collect_isize -l mfree=8G"
     shell:
-        """java -Xmx8G -jar $PICARD_DIR/CollectInsertSizeMetrics.jar I={input} O={output} H={output}.hist"""
+        """java -Xmx8G -jar $PICARD_DIR/CollectInsertSizeMetrics.jar I={input} O={output} H={output}.hist.pdf"""
 
 rule index_merged_bams:
     input: "mapping/{reference}/merged/{sample}.bam"
