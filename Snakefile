@@ -34,7 +34,8 @@ import pandas as pd
 __author__ = ""
 __license__ = "MIT"
 
-configfile: "config.json"
+if config == {}:
+    configfile: "config.json"
 
 manifest = pd.read_csv(config["manifest"], header=0, sep="\t")
 
