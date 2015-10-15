@@ -105,9 +105,12 @@ rule bwa_mem_map_and_mark_dups:
         samtools_threads = "4", samtools_memory = "8G"
     log:
         "mapping/log/{reference}/{sample}/{flowcell}/{lane}.log"
-    shell:
+    run:
+        shell(
         "bwa mem {params.custom} "
         r"-R '@RG\tID:{params.flowcell}_{wildcards.lane}\t"
         r"SM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' "
         "-t {params.bwa_threads} {input} 2> {log} "
-        "| samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}; samtools index {output}"
+        "| samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}"
+        )
+        shell("samtools index {output}")
