@@ -4,5 +4,5 @@
     },
 	"manifest": "chm13.mapping.manifest",
     "platform": "ILLUMINA",
-    "params_bwa_mem": "-M"
+    "params_bwa_mem": ""
 }
