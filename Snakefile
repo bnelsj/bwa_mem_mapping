@@ -29,13 +29,16 @@ With a separate line for each lane.
 See the local example file "chm13.mapping.manifest" for details.
 """
 
+import os
 import pandas as pd
 
 __author__ = ""
 __license__ = "MIT"
 
+SNAKEMAKE_DIR = os.path.dirname(workflow.snakefile)
+
 if config == {}:
-    configfile: "config.json"
+    configfile: "%s/config.json" % SNAKEMAKE_DIR
 
 manifest = pd.read_csv(config["manifest"], header=0, sep="\t")
 
@@ -52,8 +55,8 @@ def get_files(wildcards):
 from snakemake.exceptions import MissingInputException
 
 rule all:
-    input: expand("mapping/{reference}/metrics/{sample}.{type}.txt", reference = config["references"], sample = manifest["sn"].tolist(), type = ["insert_size_metrics", "flagstat", "idxstats"]),
-           expand("mapping/{reference}/merged/{sample}.bam.bai", reference = config["references"], sample = manifest["sn"].tolist())
+    input: expand("mapping/{reference}/metrics/{sample}.{type}.txt", reference = config["references"], sample = manifest["sn"].unique().tolist(), type = ["insert_size_metrics", "flagstat", "idxstats"]),
+           expand("mapping/{reference}/merged/{sample}.bam.bai", reference = config["references"], sample = manifest["sn"].unique().tolist())
     params: sge_opts = "-N do_isize"
 
 rule get_flagstat:
