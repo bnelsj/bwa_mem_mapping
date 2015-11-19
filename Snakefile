@@ -42,7 +42,10 @@ if config == {}:
 
 manifest = pd.read_csv(config["manifest"], header=0, sep="\t")
 
-shell.prefix("source config.sh; ")
+shell.prefix("source %s/config.sh; " % SNAKEMAKE_DIR)
+
+if not os.path.exists("log"):
+    os.makedirs("log")
 
 def lanes_from_sample(wildcards):
     manifest_sn = manifest.loc[manifest.sn == wildcards.sample]
