@@ -30,6 +30,7 @@ See the local example file "chm13.mapping.manifest" for details.
 """
 
 import os
+import sys
 import pandas as pd
 
 __author__ = ""
@@ -112,11 +113,9 @@ rule bwa_mem_map_and_mark_dups:
     log:
         "mapping/log/{reference}/{sample}/{flowcell}/{lane}.log"
     run:
-        shell(
-        "bwa mem {params.custom} "
-        r"-R '@RG\tID:{params.flowcell}_{wildcards.lane}\t"
-        r"SM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' "
-        "-t {params.bwa_threads} {input} 2> {log} "
-        "| samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}"
-        )
-        shell("samtools index {output}")
+        if input[1].endswith(".bam"):
+            shell("""set -o pipefail; samtools bam2fq {input[1]} | bwa mem {params.custom} -R '@RG\tID:{params.flowcell}_{wildcards.lane}\tSM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' -t {params.bwa_threads} {input[0]} - 2> {log} | samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}; samtools index {output}""")
+        elif all(map(lambda x: x.endswith(".gz") or x.endswith(".fq") or x.endswith(".fastq"), input[1:])):
+            shell("""set -o pipefail; bwa mem {params.custom} -R '@RG\tID:{params.flowcell}_{wildcards.lane}\tSM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' -t {params.bwa_threads} {input} 2> {log} | samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}; samtools index {output}""")
+        else:
+            sys.exit("Error: unrecognized extension (files must be .bam or .gz, .fq, or .fastq): %s" % " ".join(input[1]))
