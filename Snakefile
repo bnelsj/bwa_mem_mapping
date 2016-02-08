@@ -42,6 +42,7 @@ if config == {}:
     configfile: "%s/config.json" % SNAKEMAKE_DIR
 
 manifest = pd.read_csv(config["manifest"], header=0, sep="\t")
+manifest.lane = manifest.lane.astype(str)
 
 shell.prefix("source %s/config.sh; " % SNAKEMAKE_DIR)
 
