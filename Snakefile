@@ -41,7 +41,7 @@ SNAKEMAKE_DIR = os.path.dirname(workflow.snakefile)
 if config == {}:
     configfile: "%s/config.json" % SNAKEMAKE_DIR
 
-manifest = pd.read_csv(config["manifest"], header=0, sep="\t")
+manifest = pd.read_table(config["manifest"])
 manifest.lane = manifest.lane.astype(str)
 
 shell.prefix("source %s/config.sh; " % SNAKEMAKE_DIR)
@@ -108,7 +108,7 @@ rule bwa_mem_map_and_mark_dups:
         sample="{sample}",
         flowcell="{flowcell}",
         custom=config.get("params_bwa_mem", ""),
-        sge_opts="-l mfree=4G -pe serial 12 -N bwa_mem_map",
+        sge_opts="-l mfree=4G -pe serial 12 -N bwa_mem_map -l disk_free=200G -l h_rt=1:0:0:0 -q eichler-short-q",
         bwa_threads = "8",
         samtools_threads = "4", samtools_memory = "8G"
     log:

@@ -1,8 +1,8 @@
 {
     "references": {
-        "hg19": "/net/eichler/vol2/eee_shared/assemblies/hg19/indexes/bwa_0.7.5a-r405/ucsc.hg19.fasta"
+        "loxAfr4": "/net/eichler/vol18/calabf/elephant/loxAfr4_3masking.fasta"
     },
-	"manifest": "chm13.mapping.manifest",
+	"manifest": "/net/eichler/vol18/calabf/elephant/bwa_mem_mapping/loxAfr4_mapping.manifest",
     "platform": "ILLUMINA",
     "params_bwa_mem": ""
 }
