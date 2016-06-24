@@ -59,15 +59,16 @@ def get_files(wildcards):
 
 from snakemake.exceptions import MissingInputException
 
+localrules: all
+
 rule all:
     input: expand("mapping/{reference}/metrics/{sample}.{type}.txt", reference = config["references"], sample = manifest["sn"].unique().tolist(), type = ["insert_size_metrics", "flagstat", "idxstats"]),
            expand("mapping/{reference}/merged/{sample}.bam.bai", reference = config["references"], sample = manifest["sn"].unique().tolist())
-    params: sge_opts = "-N do_isize"
 
 rule get_flagstat:
     input: "mapping/{reference}/merged/{sample}.bam", "mapping/{reference}/merged/{sample}.bam.bai"
     output: "mapping/{reference}/metrics/{sample}.flagstat.txt"
-    params: sge_opts = "-l mfree=8G -N flagstat"
+    params: sge_opts = "-l mfree=8G -N flagstat -l h_rt=1:0:0:0"
     shell:
         "samtools flagstat {input[0]} > {output}"
    
@@ -75,27 +76,27 @@ rule get_flagstat:
 rule get_idxstats:
     input: "mapping/{reference}/merged/{sample}.bam", "mapping/{reference}/merged/{sample}.bam.bai"
     output: "mapping/{reference}/metrics/{sample}.idxstats.txt"
-    params: sge_opts = "-l mfree=8G -N idxstats"
+    params: sge_opts = "-l mfree=8G -N idxstats -l h_rt=1:0:0:0"
     shell:
         "samtools idxstats {input[0]} > {output}"
 
 rule collect_isize_metrics:
     input: "mapping/{reference}/merged/{sample}.bam"
     output: "mapping/{reference}/metrics/{sample}.insert_size_metrics.txt"
-    params: sge_opts = "-N collect_isize -l mfree=8G"
+    params: sge_opts = "-N collect_isize -l mfree=8G -l h_rt=1:0:0:0"
     shell:
         """java -Xmx8G -jar $PICARD_DIR/CollectInsertSizeMetrics.jar I={input} O={output} H={output}.hist.pdf"""
 
 rule index_merged_bams:
     input: "mapping/{reference}/merged/{sample}.bam"
     output: "mapping/{reference}/merged/{sample}.bam.bai"
-    params: sge_opts="-l mfree=8G -N index_bam"
+    params: sge_opts="-l mfree=8G -N index_bam -l h_rt=1:0:0:0"
     shell: "samtools index {input}"
 
 rule merge_bams:
     input: lanes_from_sample
     output: "mapping/{reference}/merged/{sample}.bam"
-    params: sge_opts="-l mfree=4G -pe serial 8 -N merge_bam"
+    params: sge_opts="-l mfree=4G -pe serial 8 -N merge_bam -l h_rt=1:0:0:0 -q eichler-short.q"
     shell:
         "samtools merge -@ 8 {output} {input}"
 
@@ -115,8 +116,8 @@ rule bwa_mem_map_and_mark_dups:
         "mapping/log/{reference}/{sample}/{flowcell}/{lane}.log"
     run:
         if input[1].endswith(".bam"):
-            shell("""set -o pipefail; samtools bam2fq {input[1]} | bwa mem {params.custom} -R '@RG\tID:{params.flowcell}_{wildcards.lane}\tSM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' -t {params.bwa_threads} {input[0]} - 2> {log} | samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}; samtools index {output}""")
+            shell("""set -eo pipefail; samtools bam2fq {input[1]} | bwa mem {params.custom} -R '@RG\tID:{params.flowcell}_{wildcards.lane}\tSM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' -t {params.bwa_threads} {input[0]} - 2> {log} | samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}; samtools index {output}""")
         elif all(map(lambda x: x.endswith(".gz") or x.endswith(".fq") or x.endswith(".fastq"), input[1:])):
-            shell("""set -o pipefail; bwa mem {params.custom} -R '@RG\tID:{params.flowcell}_{wildcards.lane}\tSM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' -t {params.bwa_threads} {input} 2> {log} | samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}; samtools index {output}""")
+            shell("""set -eo pipefail; bwa mem {params.custom} -R '@RG\tID:{params.flowcell}_{wildcards.lane}\tSM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' -t {params.bwa_threads} {input} 2> {log} | samblaster | samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}; samtools index {output}""")
         else:
             sys.exit("Error: unrecognized extension (files must be .bam or .gz, .fq, or .fastq): %s" % " ".join(input[1]))
