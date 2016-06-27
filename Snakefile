@@ -109,9 +109,9 @@ rule bwa_mem_map_and_mark_dups:
         sample="{sample}",
         flowcell="{flowcell}",
         custom=config.get("params_bwa_mem", ""),
-        sge_opts="-l mfree=4G -pe serial 12 -N bwa_mem_map -l disk_free=200G -l h_rt=1:0:0:0 -q eichler-short.q",
-        bwa_threads = "8",
-        samtools_threads = "4", samtools_memory = "8G"
+        sge_opts="-l mfree=4G -pe serial 12 -N bwa_mem_map -l disk_free=15G -l h_rt=1:0:0:0 -q eichler-short.q",
+        bwa_threads = "12",
+        samtools_threads = "12", samtools_memory = "8G"
     log:
         "mapping/log/{reference}/{sample}/{flowcell}/{lane}.log"
     run:
