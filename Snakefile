@@ -62,7 +62,7 @@ from snakemake.exceptions import MissingInputException
 localrules: all
 
 rule all:
-    input: expand("mapping/{reference}/metrics/{sample}.{type}.txt", reference = config["references"], sample = manifest["sn"].unique().tolist(), type = ["insert_size_metrics", "flagstat", "idxstats"]),
+    input: expand("mapping/{reference}/metrics/{sample}.{type}.txt", reference = config["references"], sample = manifest["sn"].unique().tolist(), type = ["flagstat", "idxstats"]),
            expand("mapping/{reference}/merged/{sample}.bam.bai", reference = config["references"], sample = manifest["sn"].unique().tolist())
 
 rule get_flagstat:
@@ -109,7 +109,7 @@ rule bwa_mem_map_and_mark_dups:
         sample="{sample}",
         flowcell="{flowcell}",
         custom=config.get("params_bwa_mem", ""),
-        sge_opts="-l mfree=4G -pe serial 12 -N bwa_mem_map -l disk_free=15G -l h_rt=1:0:0:0 -q eichler-short.q",
+        sge_opts="-l mfree=8G -pe serial 12 -N bwa_mem_map -l disk_free=15G -l h_rt=1:0:0:0 -q eichler-short.q -soft -l ssd=True",
         bwa_threads = "12",
         samtools_threads = "12", samtools_memory = "8G"
     log:
