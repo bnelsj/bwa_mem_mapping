@@ -1,8 +1,0 @@
-{
-    "references": {
-        "loxAfr4": "/net/eichler/vol18/calabf/elephant/loxAfr4_3masking.fasta"
-    },
-	"manifest": "/net/eichler/vol18/calabf/elephant/bwa_mem_mapping/loxAfr4_mapping.manifest",
-    "platform": "ILLUMINA",
-    "params_bwa_mem": ""
-}

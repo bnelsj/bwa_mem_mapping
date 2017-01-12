@@ -1,9 +1,7 @@
 ---
 
 references: 
-    Clint_Pantro: /net/eichler/vol2/eee_shared/assemblies/clint_panTro/polished_quivered_masked/indices/bwa/clint.contigs.quiver.pilon.masked.fasta
     hg38: /net/eichler/vol2/eee_shared/assemblies/hg38/ucsc.hg38.no_alts.fasta
-    GSMRT3: /net/eichler/vol2/eee_shared/assemblies/gorilla/susie/GSMRT3.2/index/bwa/GSMRT3.2.masked.fasta
 
 manifest: manifest.filtered.txt
 platform: ILLUMINA
