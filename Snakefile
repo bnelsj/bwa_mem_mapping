@@ -116,7 +116,7 @@ rule merge_bams:
     params: sge_opts="-l mfree=4G -pe serial 8 -N merge_bam -l h_rt=1:0:0:0 -q eichler-short.q"
     priority: 20
     shell:
-        "samtools merge -@ 8 {output} {input}"
+        "samtools merge -p -@ 8 {output} {input}"
 
 rule bwa_mem_map_from_bam:
     input:  lambda wildcards: config["references"][wildcards.reference],
@@ -134,7 +134,7 @@ rule bwa_mem_map_from_bam:
     shell:
         """set -eo pipefail 
            /net/eichler/vol8/home/zevk/tools/dumpPairFQ/wham/bin/whamg -a {input[0]} -f {input[1]} -z -x {params.bwa_threads} | \
-           bwa mem {params.custom} -p -R '@RG\tID:{params.sample}\tSM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.sample}' \
+           bwa mem {params.custom} -p -R '@RG\\tID:{params.sample}\\tSM:{params.sample}\\tLB:{params.sample}\\tPL:{config[platform]}\\tPU:{params.sample}' \
                -t {params.bwa_threads} {input[0]} - 2> {log} | \
            samblaster | \
            samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.sample} -o {output}
@@ -157,7 +157,7 @@ rule bwa_mem_map_and_mark_dups:
         "mapping/log/{reference}/{sample}/{flowcell}/{lane}.log"
     shell:
         """set -eo pipefail
-        bwa mem {params.custom} -R '@RG\tID:{params.flowcell}_{wildcards.lane}\tSM:{params.sample}\tLB:{params.sample}\tPL:{config[platform]}\tPU:{params.flowcell}' \
+        bwa mem {params.custom} -R '@RG\\tID:{params.flowcell}_{wildcards.lane}\\tSM:{params.sample}\\tLB:{params.sample}\\tPL:{config[platform]}\\tPU:{params.flowcell}' \
             -t {params.bwa_threads} {input} 2> {log} | \
         samblaster | \
         samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}
