@@ -125,19 +125,17 @@ rule bwa_mem_map_from_bam:
     params:
         sample="{sample}",
         custom=config.get("params_bwa_mem", ""),
-        sge_opts="-l mfree=16G -pe serial 10 -N bwa_mem_map -l disk_free=20G -l h_rt=3:0:0:0 -q eichler-short.q -soft -l ssd=True",
+        sge_opts="-l mfree=16G -pe serial 10 -N bwa_mem_map -l disk_free=20G -l h_rt=7:0:0:0 -q eichler-short.q -l ssd=True",
         bwa_threads = "10",
-        samtools_threads = "10", samtools_memory = "4G"
+        samtools_threads = "10", samtools_memory = "4G",
+        outdir = "mapping/{reference}/merged/"
     priority: 10
     log:
         "mapping/log/{reference}/{sample}.log"
     shell:
-        """set -eo pipefail 
-           /net/eichler/vol8/home/zevk/tools/dumpPairFQ/wham/bin/whamg -a {input[0]} -f {input[1]} -z -x {params.bwa_threads} | \
-           bwa mem {params.custom} -p -R '@RG\\tID:{params.sample}\\tSM:{params.sample}\\tLB:{params.sample}\\tPL:{config[platform]}\\tPU:{params.sample}' \
-               -t {params.bwa_threads} {input[0]} - 2> {log} | \
-           samblaster | \
-           samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.sample} -o {output}
+        """set -eo pipefail
+           run-bwamem -t {params.bwa_threads} -dso $TMPDIR/tmp.bam {input[0]} {input[1]} | bash
+           rsync --bwlimit=50000 $TMPDIR/tmp.bam {params.outdir}
            samtools index {output}"""
 
 rule bwa_mem_map_and_mark_dups:
