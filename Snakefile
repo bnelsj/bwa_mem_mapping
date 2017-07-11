@@ -45,7 +45,7 @@ if config == {}:
 manifest = pd.read_table(config["manifest"])
 manifest.lane = manifest.lane.astype(str)
 
-shell.prefix("source %s/config.sh; " % SNAKEMAKE_DIR)
+shell.prefix("source %s/env.cfg; " % SNAKEMAKE_DIR)
 
 if not os.path.exists("log"):
     os.makedirs("log")
