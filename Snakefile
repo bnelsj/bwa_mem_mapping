@@ -115,8 +115,11 @@ rule merge_bams:
     output: "mapping/{reference}/merged/{sample}.bam"
     params: sge_opts="-l mfree=4G -pe serial 8 -N merge_bam -l h_rt=1:0:0:0 -q eichler-short.q"
     priority: 20
-    shell:
-        "samtools merge -p -@ 8 {output} {input}"
+    run:
+        if len(input) > 1:
+            shell("samtools merge -p -@ 8 {output} {input}")
+        else:
+            shell("rsync --bwlimit=50000 {input} {output}")
 
 rule bwa_mem_map_from_bam:
     input:  lambda wildcards: config["references"][wildcards.reference],
@@ -147,7 +150,7 @@ rule bwa_mem_map_and_mark_dups:
         sample="{sample}",
         flowcell="{flowcell}",
         custom=config.get("params_bwa_mem", ""),
-        sge_opts="-l mfree=6G -pe serial 10 -N bwa_mem_map -l disk_free=10G -l h_rt=3:0:0:0 -q eichler-short.q -soft -l ssd=True",
+        sge_opts="-l mfree=6G -pe serial 10 -N bwa_mem_map -l disk_free=10G -l h_rt=3:0:0:0 -q eichler-short.q -soft -l ssd=True -R y",
         bwa_threads = "10",
         samtools_threads = "10", samtools_memory = "1G"
     priority: 10
