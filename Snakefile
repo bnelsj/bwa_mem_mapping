@@ -130,7 +130,7 @@ rule bwa_mem_map_from_bam:
         custom=config.get("params_bwa_mem", ""),
         sge_opts="-l mfree=16G -pe serial 10 -N bwa_mem_map -l disk_free=20G -l h_rt=7:0:0:0 -q eichler-short.q -l ssd=True",
         bwa_threads = "10",
-        samtools_threads = "10", samtools_memory = "4G",
+        samtools_threads = "9", samtools_memory = "4G",
         outdir = "mapping/{reference}/merged/"
     priority: 10
     log:
@@ -152,7 +152,7 @@ rule bwa_mem_map_and_mark_dups:
         custom=config.get("params_bwa_mem", ""),
         sge_opts="-l mfree=6G -pe serial 10 -N bwa_mem_map -l disk_free=10G -l h_rt=3:0:0:0 -q eichler-short.q -soft -l ssd=True -R y",
         bwa_threads = "10",
-        samtools_threads = "10", samtools_memory = "1G"
+        samtools_threads = "9", samtools_memory = "1G"
     priority: 10
     log:
         "mapping/log/{reference}/{sample}/{flowcell}/{lane}.log"
