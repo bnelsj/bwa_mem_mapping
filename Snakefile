@@ -43,21 +43,13 @@ if config == {}:
     configfile: "%s/config.yaml" % SNAKEMAKE_DIR
 
 manifest = pd.read_table(config["manifest"])
-manifest.lane = manifest.lane.astype(str)
+if config["input_type"] != "bam":
+    manifest.lane = manifest.lane.astype(str)
 
 shell.prefix("source %s/env.cfg; " % SNAKEMAKE_DIR)
 
 if not os.path.exists("log"):
     os.makedirs("log")
-
-INPUT_TYPE = config["input_type"]
-if INPUT_TYPE in ["fastq", "fastq.gz"]:
-    ruleorder: merge_bams > bwa_mem_map_from_bam
-elif INPUT_TYPE == "bam":
-    ruleorder: bwa_mem_map_from_bam > merge_bams
-else:
-    print("Error: input_type must be in ['bam', 'fastq', 'fastq.gz']")
-    sys.exit(1)
 
 def lanes_from_sample(wildcards):
     manifest_sn = manifest.loc[manifest.sn == wildcards.sample]
@@ -121,47 +113,49 @@ rule merge_bams:
         else:
             shell("rsync --bwlimit=50000 {input} {output}")
 
-rule bwa_mem_map_from_bam:
-    input:  lambda wildcards: config["references"][wildcards.reference],
-            get_bam
-    output: "mapping/{reference}/merged/{sample}.bam"
-    params:
-        sample="{sample}",
-        custom=config.get("params_bwa_mem", ""),
-        sge_opts="-l mfree=16G -pe serial 10 -N bwa_mem_map -l disk_free=20G -l h_rt=7:0:0:0 -q eichler-short.q -l ssd=True",
-        bwa_threads = "10",
-        samtools_threads = "9", samtools_memory = "4G",
-        outdir = "mapping/{reference}/merged/"
-    priority: 10
-    log:
-        "mapping/log/{reference}/{sample}.log"
-    shell:
-        """set -eo pipefail
-           run-bwamem -t {params.bwa_threads} -dso $TMPDIR/tmp.bam {input[0]} {input[1]} | bash
-           rsync --bwlimit=50000 $TMPDIR/tmp.bam {params.outdir}
-           samtools index {output}"""
+if config["input_type"] == "bam":
+    rule bwa_mem_map_from_bam:
+        input:  lambda wildcards: config["references"][wildcards.reference],
+                get_bam
+        output: "mapping/{reference}/merged/{sample}.bam"
+        params:
+            sample="{sample}",
+            custom=config.get("params_bwa_mem", ""),
+            sge_opts="-l mfree=16G -pe serial 10 -N bwa_mem_map -l disk_free=20G -l h_rt=7:0:0:0 -q eichler-short.q -l ssd=True",
+            bwa_threads = "10",
+            samtools_threads = "9", samtools_memory = "4G",
+            outdir = "mapping/{reference}/merged/"
+        priority: 10
+        log:
+            "mapping/log/{reference}/{sample}.log"
+        shell:
+            """set -eo pipefail
+               run-bwamem -t {params.bwa_threads} -dso $TMPDIR/tmp.bam {input[0]} {input[1]} | bash
+               rsync --bwlimit=50000 $TMPDIR/tmp.bam {params.outdir}
+               samtools index {output}"""
 
-rule bwa_mem_map_and_mark_dups:
-    input:  lambda wildcards: config["references"][wildcards.reference],
-            get_files
-    output:
-        "mapping/{reference}/{sample}/{flowcell}/{lane}.bam"
-    params:
-        sample="{sample}",
-        flowcell="{flowcell}",
-        custom=config.get("params_bwa_mem", ""),
-        sge_opts="-l mfree=6G -pe serial 10 -N bwa_mem_map -l disk_free=10G -l h_rt=3:0:0:0 -q eichler-short.q -soft -l ssd=True -R y",
-        bwa_threads = "10",
-        samtools_threads = "9", samtools_memory = "1G"
-    priority: 10
-    log:
-        "mapping/log/{reference}/{sample}/{flowcell}/{lane}.log"
-    shell:
-        """set -eo pipefail
-        bwa mem {params.custom} -R '@RG\\tID:{params.flowcell}_{wildcards.lane}\\tSM:{params.sample}\\tLB:{params.sample}\\tPL:{config[platform]}\\tPU:{params.flowcell}' \
-            -t {params.bwa_threads} {input} 2> {log} | \
-        samblaster | \
-        samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}
-        samtools index {output}"""
-
-
+elif config["input_type"] in ["fastq", "fastq.gz"]:
+    rule bwa_mem_map_and_mark_dups:
+        input:  lambda wildcards: config["references"][wildcards.reference],
+                get_files
+        output:
+            "mapping/{reference}/{sample}/{flowcell}/{lane}.bam"
+        params:
+            sample="{sample}",
+            flowcell="{flowcell}",
+            custom=config.get("params_bwa_mem", ""),
+            sge_opts="-l mfree=6G -pe serial 10 -N bwa_mem_map -l disk_free=10G -l h_rt=3:0:0:0 -q eichler-short.q -soft -l ssd=True -R y",
+            bwa_threads = "10",
+            samtools_threads = "9", samtools_memory = "1G"
+        priority: 10
+        log:
+            "mapping/log/{reference}/{sample}/{flowcell}/{lane}.log"
+        shell:
+            """set -eo pipefail
+            bwa mem {params.custom} -R '@RG\\tID:{params.flowcell}_{wildcards.lane}\\tSM:{params.sample}\\tLB:{params.sample}\\tPL:{config[platform]}\\tPU:{params.flowcell}' \
+                -t {params.bwa_threads} {input} 2> {log} | \
+            samblaster | \
+            samtools sort -@ {params.samtools_threads} -m {params.samtools_memory} -O bam -T $TMPDIR/{wildcards.lane} -o {output}
+            samtools index {output}"""
+else:
+    sys.exit("Input type {} not recognized.".format(config["input_type"]))
