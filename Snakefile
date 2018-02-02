@@ -130,8 +130,8 @@ if config["input_type"] == "bam":
             "mapping/log/{reference}/{sample}.log"
         shell:
             """set -eo pipefail
-               run-bwamem -t {params.bwa_threads} -dso $TMPDIR/tmp.bam {input[0]} {input[1]} | bash
-               rsync --bwlimit=50000 $TMPDIR/tmp.bam {params.outdir}
+               run-bwamem -t {params.bwa_threads} -dso $TMPDIR/tmp {input[0]} {input[1]} | bash
+               rsync --bwlimit=50000 $TMPDIR/tmp.aln.bam {params.outdir}
                samtools index {output}"""
 
 elif config["input_type"] in ["fastq", "fastq.gz"]:
