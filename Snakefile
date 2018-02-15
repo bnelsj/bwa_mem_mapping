@@ -121,7 +121,7 @@ if config["input_type"] == "bam":
         params:
             sample="{sample}",
             custom=config.get("params_bwa_mem", ""),
-            sge_opts="-l mfree=16G -pe serial 10 -N bwa_mem_map -l disk_free=20G -l h_rt=7:0:0:0 -q eichler-short.q -l ssd=True",
+            sge_opts="-l mfree=8G -pe serial 10 -N bwa_mem_map -l disk_free=20G -l h_rt=7:0:0:0 -q eichler-short.q -l ssd=True",
             bwa_threads = "10",
             samtools_threads = "9", samtools_memory = "4G",
             outdir = "mapping/{reference}/merged/"
@@ -131,7 +131,7 @@ if config["input_type"] == "bam":
         shell:
             """set -eo pipefail
                run-bwamem -t {params.bwa_threads} -dso $TMPDIR/tmp {input[0]} {input[1]} | bash
-               rsync --bwlimit=50000 $TMPDIR/tmp.aln.bam {params.outdir}
+               rsync --bwlimit=50000 $TMPDIR/tmp.aln.bam {output}
                samtools index {output}"""
 
 elif config["input_type"] in ["fastq", "fastq.gz"]:
